@@ -13,29 +13,9 @@ var fs              = require('fs'),
     path            = require('path'),
     files           = require.once('./files.js'),
     config          = require('./config.js'),
-    coreMoulesDir   = 'core/core_modules',
     modulesDir      = 'modules',
     descriptor      = 'kassy.json';
 
-exports.listCoreModules = function () {
-    var data = files.filesInDirectory('./' + coreMoulesDir);
-    data = data.filter(function (value) {
-        return value.endsWith(".js");
-    });
-    return data;
-};
-
-exports.loadCoreModule = function(platform, module) {
-    var fp = path.resolve(__dirname, '../' + coreMoulesDir + '/' + module),
-        index = Object.keys(require.cache).indexOf(fp),
-        m = index !== -1 ? require.reload(fp) : require.once(fp);
-    m.platform = exports;
-    m.name = module;
-    if (m.load) {
-        m.load.apply(platform);
-    }
-    return m;
-};
 
 exports.verifyModuleDescriptior = function (kj, disabled) {
 	if (!kj.name || !kj.startup || !kj.version) {

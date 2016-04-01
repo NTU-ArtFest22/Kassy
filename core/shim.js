@@ -13,7 +13,7 @@ exports.createPlatformModule = function(platform) {
 
 	if (!platform.sendImage) {
 		platform.sendImage = function(type, image, description, thread) {
-			switch(type) {
+			switch (type) {
 				case 'url': // fallback to sending a url
 					platform.sendMessage(description, thread);
 					platform.sendUrl(image, thread);
@@ -32,7 +32,7 @@ exports.createPlatformModule = function(platform) {
 	if (!platform.sendFile) {
 		platform.sendFile = function(type, file, description, thread) {
 			platform.sendMessage(description, thread);
-			switch(type) {
+			switch (type) {
 				case 'url': // fallback to sending a url
 					platform.sendUrl(file, thread);
 					break;
@@ -59,14 +59,7 @@ exports.createPlatformModule = function(platform) {
 		}
 	}
 
-	if (!platform.commandPrefix) {
-		if (platform.config && platform.config.commandPrefix) {
-			platform.commandPrefix = platform.config.commandPrefix;
-		}
-		else {
-			platform.commandPrefix = '/';
-		}
-	}
+	platform.commandPrefix = '';
 
 	if (!platform.sendPrivateMessage) {
 		platform.sendPrivateMessage = function(message, thread) {
@@ -77,11 +70,12 @@ exports.createPlatformModule = function(platform) {
 	return platform;
 };
 
-exports.createEvent = function(thread, senderId, senderName, message) {
+exports.createEvent = function(thread, senderId, senderName, message, event) {
 	return {
 		thread_id: thread,
 		sender_id: senderId,
 		sender_name: senderName,
-		body: message
+		body: message,
+		event: event
 	};
 };

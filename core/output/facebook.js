@@ -7,7 +7,11 @@ var fb = require("facebook-chat-api"),
 	platformApi = null;
 
 exports.start = function(callback) {
-	fb({email: this.config.username, password: this.config.password}, function (err, api) {
+	var page = {};
+	if(this.config.pageID){
+		page.pageID= this.config.pageID;
+	}
+	fb({email: this.config.username, password: this.config.password},page, function (err, api) {
 		if(err) {
 			console.error(err);
 			process.exit(-1);
@@ -17,12 +21,19 @@ exports.start = function(callback) {
 		
 		platform = shim.createPlatformModule({
 			commandPrefix: exports.config.commandPrefix,
+			sendSticker: function(id, thread) {
+				if(!id||!id.sticker){
+	        id = {sticker:1604284059801367};
+	       }
+	       api.sendMessage(id, thread);
+			},
 			sendMessage: function(message, thread) {
 				if (endTyping != null) {
 					endTyping();
 					endTyping = null;
 				}
 				api.sendMessage({body:message}, thread);
+
 			},
 			sendUrl: function(url, thread) {
 				if (endTyping != null) {
@@ -86,7 +97,7 @@ exports.start = function(callback) {
 			};
 			switch(event.type) {
 				case "message": {
-					var data = shim.createEvent(event.threadID, event.senderID, event.senderName, event.body);
+					var data = shim.createEvent(event.threadID, event.senderID, event.senderName, event.body, event);
 					callback(platform, data);
 					break;
 				}

@@ -81,7 +81,7 @@ exports.run = function(api, event) {
     exports.search(query, function(image) {
             if (image.hasOwnProperty('url')) {
                 var url = exports.ensureExt(image.url);
-                api.sendImage("url", url, "I found this:", event.thread_id);
+                api.sendImage("url", url, "我找到這個", event.thread_id);
             }
             else if(image.hasOwnProperty('error')) {
                 api.sendMessage(image.error, event.thread_id);

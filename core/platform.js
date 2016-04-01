@@ -1,30 +1,31 @@
 /**
-* Main platform. Handles the core interop of the program and
-* acts as the glue code for the various parts of the code.
-*
-* Written By:
-*         Matthew Knox
-*
-* License:
-*        MIT License. All code unless otherwise specified is
-*        Copyright (c) Matthew Knox and Contributors 2015.
-*/
+ * Main platform. Handles the core interop of the program and
+ * acts as the glue code for the various parts of the code.
+ *
+ * Written By:
+ *         Matthew Knox
+ *
+ * License:
+ *        MIT License. All code unless otherwise specified is
+ *        Copyright (c) Matthew Knox and Contributors 2015.
+ */
 
-var figlet = require('figlet'),
+var figlet = require('figlet');
+var request = require('request');
+var defaultMessage = require('./default.js');
 
 Platform = function(modes) {
     require.reload('./prototypes.js');
 
     this.config = require('./config.js');
     this.loadedModules = [];
-    this.coreModules = [];
     this.modes = null;
-    this.defaultPrefix = '/';
+    this.defaultPrefix = '';
     this.packageInfo = require.once('../package.json');
     this.modules = require.once('./modules.js');
     this.statusFlag = StatusFlag.NotStarted;
     this.onShutdown = null;
-    this.waitingTime = 250;
+    this.waitingTime = 2500;
 
     this.packageInfo.name = this.packageInfo.name.toProperCase();
     this.setModes(modes);
@@ -43,43 +44,45 @@ Platform.prototype.handleTransaction = function(module, args) {
 };
 
 Platform.prototype.messageRxd = function(api, event) {
-    var matchArgs = [event.body, api.commandPrefix, event.thread_id, event.sender_name],
-        runArgs = [api, event],
-        abort = false;
-
-    // Run core modules in platform mode
-    for (var i = 0; i < this.coreModules.length; i++) {
-        if (this.coreModules[i].match.apply(this, matchArgs)) {
-            var temp = !this.coreModules[i].run.apply(this, runArgs);
-            abort = abort || temp;
-        }
-    }
-    if (abort) {
+    if (event.event && event.event.attachments && event.event.attachments[0] && event.event.attachments[0].type === 'sticker') {
+        api.sendSticker({
+            sticker: event.event.attachments[0].stickerID
+        }, event.thread_id);
         return;
     }
+    var matchArgs = [event.body, api.commandPrefix, event.thread_id, event.sender_name],
+        runArgs = [api, event];
 
+    var moduleLength = this.loadedModules.length;
+    var falseCount = 0;
     // Run user modules in protected mode
-    for (var i = 0; i < this.loadedModules.length; i++) {
-    	var matchResult = false;
-    	try {
-    		matchResult = this.loadedModules[i].match.apply(this.loadedModules[i], matchArgs);
-    	}
-    	catch (e) {
-    		console.error('The module ' + this.loadedModules[i].name + ' appears to be broken. Please remove or fix it.');
-    		console.critical(e);
-    		continue;
-    	}
+    for (var i = 0; i < moduleLength; i++) {
+        var matchResult = false;
+        try {
+            matchResult = this.loadedModules[i].match.apply(this.loadedModules[i], matchArgs);
+        } catch (e) {
+            console.error('The module ' + this.loadedModules[i].name + ' appears to be broken. Please remove or fix it.');
+            console.critical(e);
+            continue;
+        }
 
         if (matchResult) {
             try {
                 this.handleTransaction(this.loadedModules[i], runArgs);
-            }
-            catch (e) {
+            } catch (e) {
                 api.sendMessage(event.body + ' fucked up. Damn you ' + event.sender_name + ".", event.thread_id);
                 console.critical(e);
             }
             return;
+        } else {
+            falseCount++;
         }
+    }
+    if (falseCount === moduleLength) {
+        api.sendTyping(event.thread_id);
+        defaultMessage(event.body, function(response) {
+            api.sendMessage(response, event.thread_id);
+        })
     }
 };
 
@@ -97,8 +100,7 @@ Platform.prototype.setModes = function(modes) {
             this.modes.push(mode);
         }
         return true;
-    }
-    catch (e) {
+    } catch (e) {
         console.critical(e);
         console.error('Loading the output mode file \'' + modes[i] + '\' failed.' +
             '\n\nIf this is your file please ensure that it is syntactically correct.');
@@ -118,8 +120,7 @@ Platform.prototype.start = function() {
 
     console.title(' ' + this.packageInfo.version);
     console.info('------------------------------------');
-    console.warn('Starting system...\n'
-                + 'Loading system configuration...');
+    console.warn('Starting system...\n' + 'Loading system configuration...');
 
     this.modules.disabledConfig = this.config.loadDisabledConfig();
     for (var i = 0; i < this.modes.length; i++) {
@@ -130,21 +131,14 @@ Platform.prototype.start = function() {
         }
     }
 
-    // Load core modules
-    console.warn('Loading core components...');
-    var m = this.modules.listCoreModules();
-    for (var i = 0; i < m.length; i++) {
-        this.coreModules.push(this.modules.loadCoreModule(this, m[i]));
-    }
-
     // Load Kassy modules
     console.warn('Loading modules...');
     m = this.modules.listModules();
     for (var mod in m) {
-		var ld = this.modules.loadModule(m[mod]);
-		if (ld !== null) {
-			this.loadedModules.push(ld);
-		}
+        var ld = this.modules.loadModule(m[mod]);
+        if (ld !== null) {
+            this.loadedModules.push(ld);
+        }
     }
 
     // Starting output
@@ -154,8 +148,7 @@ Platform.prototype.start = function() {
             console.write("Loading output '" + this.modes[i].name + "'...\t");
             this.modes[i].instance.start(this.messageRxd.bind(this));
             console.info("[DONE]");
-        }
-        catch (e) {
+        } catch (e) {
             console.error("[FAIL]");
             console.debug("Failed to start output integration '" + this.modes[i].name + "'.");
             console.critical(e);
@@ -178,8 +171,7 @@ Platform.prototype.shutdown = function(flag) {
     for (var i = 0; i < this.modes.length; i++) {
         try {
             this.modes[i].instance.stop();
-        }
-        catch (e) {
+        } catch (e) {
             console.debug("Failed to correctly stop output mode '" + this.modes[i] + "'.");
             console.critical(e);
         }
@@ -193,15 +185,6 @@ Platform.prototype.shutdown = function(flag) {
         this.loadedModules[i] = null;
     }
     this.loadedModules = [];
-
-    // Unload core modules
-    for (var i = 0; i < this.coreModules.length; i++) {
-        if (this.coreModules[i].unload) {
-            this.coreModules[i].unload();
-        }
-        this.coreModules[i] = null;
-    }
-    this.coreModules = [];
 
     this.config.saveConfig();
     this.statusFlag = flag ? flag : StatusFlag.Shutdown;

@@ -14,11 +14,9 @@ require.once('babel-register', true);
 require.once('babel-polyfill', true);
 
 // string.startsWith
-if (typeof String.prototype.startsWith != 'function') {
-	String.prototype.startsWith = function (str){
-		return this.indexOf(str) === 0;
-	};
-}
+String.prototype.startsWith = function(search) {
+  return this.indexOf(search) !== -1;
+};
 
 // string.toProperCase
 if (typeof String.prototype.toProperCase != 'function') {

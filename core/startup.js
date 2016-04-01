@@ -25,6 +25,7 @@ var selectedModes    = null,
         }
         catch(e) {
             console.critical(e);
+            console.log(e.codeFrame);
             console.error('A critical error occurred while running. Please check your configuration or report a bug.');
             process.exit(-3);
         }

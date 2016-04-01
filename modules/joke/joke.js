@@ -3,7 +3,7 @@ var reddit = require('./../common/reddit.js'),
     results = [];
 
 exports.match = function(text, commandPrefix) {
-    return text.startsWith(commandPrefix + 'joke');
+    return text.startsWith(commandPrefix + '笑話');
 };
 
 exports.help = function(commandPrefix) {
