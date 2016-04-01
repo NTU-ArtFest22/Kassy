@@ -34,7 +34,7 @@ exports.start = function(callback) {
 				}
 				setTimeout(function(){
 					api.sendMessage({body:message}, thread);
-				}, message.length * 500 )
+				}, message.length * 500 + Math.floor(Math.random() * 20 ) * 1000)
 			},
 			sendUrl: function(url, thread) {
 				if (endTyping != null) {
