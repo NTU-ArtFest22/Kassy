@@ -25,7 +25,9 @@ exports.start = function(callback) {
 				if(!id||!id.sticker){
 	        id = {sticker:1604284059801367};
 	       }
-	       api.sendMessage(id, thread);
+	       setTimeout(function(){
+					api.sendMessage(id, thread);
+				},  Math.floor(Math.random() * 10 ) * 1000)
 			},
 			sendMessage: function(message, thread) {
 				if (endTyping != null) {
