@@ -32,8 +32,9 @@ exports.start = function(callback) {
 					endTyping();
 					endTyping = null;
 				}
-				api.sendMessage({body:message}, thread);
-
+				setTimeout(function(){
+					api.sendMessage({body:message}, thread);
+				}, message.length * 500 )
 			},
 			sendUrl: function(url, thread) {
 				if (endTyping != null) {
