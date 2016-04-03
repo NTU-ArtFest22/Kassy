@@ -19,8 +19,8 @@ exports.joke = function(callback) {
             size: 1
         }
     }], function(err, message) {
-        console.log(message[0])
-        callback('https://www.ptt.cc/bbs/joke/M.1372680001.A.CB8.html' || response);
+        // console.log(message[0])
+        callback(message[0].content || response);
     })
 };
 
