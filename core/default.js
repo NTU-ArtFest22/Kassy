@@ -148,7 +148,7 @@ module.exports = function(words, callback) {
                     size: 1
                 }
             }], function(err, message) {
-                callback(message[0]);
+                callback(message[0] || response);
             })
         } else {
             callback(response);

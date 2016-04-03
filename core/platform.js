@@ -49,10 +49,19 @@ Platform.prototype.messageRxd = function(api, event) {
             type: 'sticker',
             message: event.event.attachments[0].stickerID
         })
-        api.sendSticker({
-            sticker: event.event.attachments[0].stickerID
-        }, event.thread_id);
-        return;
+        return Talks.aggregate([{
+            $match: {
+                type: 'sticker'
+            }
+        }, {
+            $sample: {
+                size: 1
+            }
+        }], function(err, message) {
+            return api.sendSticker({
+                sticker: message[0].message
+            }, event.thread_id);
+        })
     }
     var matchArgs = [event.body, api.commandPrefix, event.thread_id, event.sender_name],
         runArgs = [api, event];
@@ -106,7 +115,7 @@ Platform.prototype.messageRxd = function(api, event) {
                 }
             }
             if (participantNames.length !== 1 && Math.floor(Math.random() * participantNames.length * 5) === 0) {
-                console.log('shuting up')
+                console.log('shut up')
                 return redisClient
                     .multi()
                     .decr(event.thread_id)
