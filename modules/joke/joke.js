@@ -7,26 +7,21 @@ exports.match = function(text, commandPrefix) {
 };
 
 exports.help = function(commandPrefix) {
-    return [[commandPrefix + 'joke','A mixed bag of fun.']];
+    return [
+        [commandPrefix + 'joke', 'A mixed bag of fun.']
+    ];
 };
 
-exports.joke = function(callback, waitCallback) {
+exports.joke = function(callback) {
     // If we have no stored joke, get some
-    if (typeof results === 'undefined' || results === null || results.length === 0) {
-		waitCallback();
-        reddit.reddit('jokes', 200, function (err, data) {
-            if (!err) {
-                results = data;
-                exports.fuckNode(callback);
-            }
-            else {
-                callback(data);
-            }
-        });
-    }
-    else {
-        exports.fuckNode(callback);
-    }
+    Jokes.aggregate([{
+        $sample: {
+            size: 1
+        }
+    }], function(err, message) {
+        console.log(message[0])
+        callback('https://www.ptt.cc/bbs/joke/M.1372680001.A.CB8.html' || response);
+    })
 };
 
 exports.fuckNode = function(callback) {
@@ -44,9 +39,9 @@ exports.fuckNode = function(callback) {
 
 exports.run = function(api, event) {
     exports.joke(function(result) {
-        api.sendMessage(result, event.thread_id);
-    },
-	function() {
-		api.sendTyping(event.thread_id);
-	});
+            api.sendMessage(result, event.thread_id);
+        },
+        function() {
+            api.sendTyping(event.thread_id);
+        });
 };

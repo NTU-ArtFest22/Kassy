@@ -55,7 +55,7 @@ exports.start = function(callback) {
 						.decr(thread)
 						.expire(thread, 120)
 						.exec()
-				}, message.length * 100 + Math.floor(Math.random() * 20) * 1000)
+				}, message.length * 100 + Math.floor(Math.random() * 20) * 0)
 			},
 			sendUrl: function(url, thread) {
 				if (endTyping != null) {

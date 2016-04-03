@@ -137,12 +137,14 @@ module.exports = function(words, callback) {
         response = '先別說這個了，你聽過藝術季嗎？'
         if (random(5) === 0) {
             request.get({
-                url: 'http://more.handlino.com/sentences.json?n=1&corpus=xuzhimo'
+                url: 'http://more.handlino.com/sentences.json?n=1&limit=30&corpus=xuzhimo'
             }, function(error, response, body) {
                 body = JSON.parse(body);
                 callback(body.sentences[0]);
             });
-        } else if (random(2) === 0) {
+        } else if (random(5) === 0) {
+            callback(response);
+        } else {
             Talks.aggregate([{
                 $sample: {
                     size: 1
@@ -150,8 +152,6 @@ module.exports = function(words, callback) {
             }], function(err, message) {
                 callback(message[0] || response);
             })
-        } else {
-            callback(response);
         }
     } else {
         callback(response);
