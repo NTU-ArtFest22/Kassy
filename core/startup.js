@@ -15,15 +15,14 @@
  *        Copyright (c) Matthew Knox and Contributors 2015.
  */
 
-var selectedModes    = null,
+var selectedModes = null,
     startNewPlatform = function() {
         try {
             var Platform = require.once('./platform.js'),
                 platform = new Platform(selectedModes);
             platform.setOnShutdown(checkShutdownCode);
             platform.start();
-        }
-        catch(e) {
+        } catch (e) {
             console.critical(e);
             console.log(e.codeFrame);
             console.error('A critical error occurred while running. Please check your configuration or report a bug.');
@@ -37,6 +36,15 @@ var selectedModes    = null,
     };
 
 exports.run = function(modes) {
+    var Redis = require('ioredis');
+    var mongojs = require('mongojs')
+    var db = mongojs('ntuaf', ['jokes', 'talks'])
+    global.Jokes = db.jokes;
+    global.Talks = db.talks;
+    global.redisClient = new Redis({
+        host: 'localhost',
+        port: '6379'
+    });
     selectedModes = modes;
     startNewPlatform();
 };

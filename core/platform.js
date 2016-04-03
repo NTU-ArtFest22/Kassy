@@ -45,6 +45,10 @@ Platform.prototype.handleTransaction = function(module, args) {
 
 Platform.prototype.messageRxd = function(api, event) {
     if (event.event && event.event.attachments && event.event.attachments[0] && event.event.attachments[0].type === 'sticker') {
+        Talks.insert({
+            type: 'sticker',
+            message: event.event.attachments[0].stickerID
+        })
         api.sendSticker({
             sticker: event.event.attachments[0].stickerID
         }, event.thread_id);
@@ -55,35 +59,77 @@ Platform.prototype.messageRxd = function(api, event) {
 
     var moduleLength = this.loadedModules.length;
     var falseCount = 0;
-    // Run user modules in protected mode
-    for (var i = 0; i < moduleLength; i++) {
-        var matchResult = false;
-        try {
-            matchResult = this.loadedModules[i].match.apply(this.loadedModules[i], matchArgs);
-        } catch (e) {
-            console.error('The module ' + this.loadedModules[i].name + ' appears to be broken. Please remove or fix it.');
-            console.critical(e);
-            continue;
-        }
-
-        if (matchResult) {
-            try {
-                this.handleTransaction(this.loadedModules[i], runArgs);
-            } catch (e) {
-                api.sendMessage(event.body + ' fucked up. Damn you ' + event.sender_name + ".", event.thread_id);
-                console.critical(e);
+    var handleTransactionFunction = this.handleTransaction
+    var modules = this.loadedModules;
+    var participantNames = event.event.participantNames;
+    return redisClient
+        .multi()
+        .incr(event.thread_id)
+        .expire(event.thread_id, 120)
+        .exec()
+        .then(function(value) {
+            if (value && value[0] && value[0][1] >= 5) {
+                return redisClient
+                    .multi()
+                    .decr(event.thread_id)
+                    .expire(event.thread_id, 120)
+                    .exec();
+                if (value[0][1] > 6) {
+                    return redisClient
+                        .multi()
+                        .set(event.thread_id, 0)
+                        .expire(event.thread_id, 120)
+                        .exec();
+                }
             }
-            return;
-        } else {
-            falseCount++;
-        }
-    }
-    if (falseCount === moduleLength) {
-        api.sendTyping(event.thread_id);
-        defaultMessage(event.body, function(response) {
-            api.sendMessage(response, event.thread_id);
+            // Run user modules in protected mode
+            for (var i = 0; i < moduleLength; i++) {
+                var matchResult = false;
+                try {
+                    matchResult = modules[i].match.apply(modules[i], matchArgs);
+                } catch (e) {
+                    console.error('The module ' + modules[i].name + ' appears to be broken. Please remove or fix it.');
+                    console.critical(e);
+                    continue;
+                }
+
+                if (matchResult) {
+                    try {
+                        handleTransactionFunction(modules[i], runArgs);
+                    } catch (e) {
+                        api.sendMessage(event.body + ' fucked up. Damn you ' + event.sender_name + ".", event.thread_id, event);
+                        console.critical(e);
+                    }
+                    return;
+                } else {
+                    falseCount++;
+                }
+            }
+            if (participantNames.length !== 1 && Math.floor(Math.random() * participantNames.length * 5) === 0) {
+                console.log('shuting up')
+                return redisClient
+                    .multi()
+                    .decr(event.thread_id)
+                    .expire(event.thread_id, 120)
+                    .exec();
+            }
+            if (falseCount === moduleLength) {
+                api.sendTyping(event.thread_id);
+                defaultMessage(event.body, function(response) {
+                    if (response.type === 'sticker') {
+                        api.sendSticker({
+                            sticker: response.message
+                        }, event.thread_id);
+                    } else {
+                        if (response.type === 'text') {
+                            response = response.message
+                        }
+                        console.log(response);
+                        api.sendMessage(response, event.thread_id);
+                    }
+                })
+            }
         })
-    }
 };
 
 Platform.prototype.setModes = function(modes) {

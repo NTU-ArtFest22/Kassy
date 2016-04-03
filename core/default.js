@@ -112,7 +112,7 @@ function getAnswer(say) {
             for (var qi in qList) { // 對於每個問題字串 q
                 var q = qList[qi];
                 if (q == "") // 如果是最後一個「空字串」的話，那就不用比對，直接任選一個回答。
-                    return aList[random(aList.length)]; // 那就從答案中任選一個回答
+                    return false;
                 var r = new RegExp("(.*)" + q + "([^?.;]*)", "gi"); // 建立正規表達式 (.*) q ([^?.;]*)
                 if (say.match(r)) { // 比對成功的話
                     tail = RegExp.$2; // 就取出句尾
@@ -123,18 +123,37 @@ function getAnswer(say) {
             }
         } catch (err) {}
     }
-    return "然後呢？"; // 如果發生任何錯誤，就回答「然後呢？」來混過去。
+    return false;
 }
 
+
 module.exports = function(words, callback) {
-    if (random(10) === 1) {
-        request.get({
-            url: 'http://more.handlino.com/sentences.json'
-        }, function(error, response, body) {
-            body = JSON.parse(body);
-            callback(body.sentences);
-        });
+    var response = getAnswer(words);
+    Talks.insert({
+        type: 'text',
+        message: words
+    })
+    if (!response) {
+        response = '先別說這個了，你聽過藝術季嗎？'
+        if (random(5) === 0) {
+            request.get({
+                url: 'http://more.handlino.com/sentences.json?n=1&corpus=xuzhimo'
+            }, function(error, response, body) {
+                body = JSON.parse(body);
+                callback(body.sentences[0]);
+            });
+        } else if (random(2) === 0) {
+            Talks.aggregate([{
+                $sample: {
+                    size: 1
+                }
+            }], function(err, message) {
+                callback(message[0]);
+            })
+        } else {
+            callback(response);
+        }
     } else {
-        callback(getAnswer(words));
+        callback(response);
     }
 };
