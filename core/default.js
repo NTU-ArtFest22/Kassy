@@ -1,5 +1,8 @@
 var request = require.safe('request');
 var _ = require.safe('lodash');
+var Filter = require('bad-words-chinese'),
+    filter = new Filter();
+
 
 var qaList = [{
     Q: "謝謝",
@@ -129,7 +132,7 @@ function getAnswer(say) {
 
 module.exports = function(words, callback) {
     var response = getAnswer(words);
-    if (words && words.length <= 20) {
+    if (words && words.length <= 20 && !filter.isProfane(words)) {
         Talks.insert({
             type: 'text',
             message: words
