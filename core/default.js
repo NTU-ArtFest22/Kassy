@@ -1,5 +1,5 @@
 var request = require.safe('request');
-
+var _ = require.safe('lodash');
 
 var qaList = [{
     Q: "謝謝",
@@ -148,11 +148,38 @@ module.exports = function(words, callback) {
             callback(response);
         } else {
             Talks.aggregate([{
-                $sample: {
-                    size: 1
+                $group: {
+                    _id: {
+                        'message': '$message',
+                        'type': '$type'
+                    },
+                    count: {
+                        $sum: 1
+                    }
                 }
-            }], function(err, message) {
-                callback(message[0] || response);
+            }, {
+                $match: {
+                    count: {
+                        $gte: 3
+                    }
+                }
+            }, {
+                $sample: {
+                    size: 3
+                }
+            }], function(err, messages) {
+                var response = _.find(messages, function(message) {
+                    return message._id.type === 'text';
+                })
+                if (!response) {
+                    response = _.maxBy(messages, function(message) {
+                        return message.count;
+                    })
+                    response = response._id.message;
+                } else {
+                    response = response._id.message;
+                }
+                callback(response);
             })
         }
     } else {

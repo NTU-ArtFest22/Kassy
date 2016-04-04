@@ -44,6 +44,9 @@ Platform.prototype.handleTransaction = function(module, args) {
 };
 
 Platform.prototype.messageRxd = function(api, event) {
+    if (console.isDebug() && event.sender_id !== '100000187207997') {
+        return;
+    }
     if (event.event && event.event.attachments && event.event.attachments[0] && event.event.attachments[0].type === 'sticker') {
         ga.event("Receive", "Sticker", "Content", event.event.attachments[0].stickerID).send()
         Talks.insert({
@@ -66,7 +69,6 @@ Platform.prototype.messageRxd = function(api, event) {
     }
     var matchArgs = [event.body, api.commandPrefix, event.thread_id, event.sender_name],
         runArgs = [api, event];
-    console.log(event.event.threadName)
     var moduleLength = this.loadedModules.length;
     var falseCount = 0;
     var handleTransactionFunction = this.handleTransaction
@@ -85,6 +87,7 @@ Platform.prototype.messageRxd = function(api, event) {
                     .expire(event.thread_id, 120)
                     .exec();
                 if (value[0][1] > 6) {
+                    console.log('ga-attacks-dos')
                     ga.event("Receive", "Attacks", "DOS", event.sender_name).send()
                     return redisClient
                         .multi()
@@ -118,6 +121,7 @@ Platform.prototype.messageRxd = function(api, event) {
             }
             if (participantNames.length !== 1 && Math.floor(Math.random() * participantNames.length * 5) === 0) {
                 ga.event("Answer", "Shut", "Participant Count", event.event.threadName + '_' + participantNames.length).send()
+                console.log('ga-shut-up')
                 redisClient
                     .multi()
                     .decr(event.thread_id)
@@ -129,7 +133,8 @@ Platform.prototype.messageRxd = function(api, event) {
                 api.sendTyping(event.thread_id);
                 defaultMessage(event.body, function(response) {
                     if (response.type === 'sticker') {
-                        ga.event("Answer", "Message", "Content", response).send()
+                        console.log('ga-sticker-content')
+                        ga.event("Answer", "Sticker", "Content", response).send()
                         api.sendSticker({
                             sticker: response.message
                         }, event.thread_id);
@@ -137,7 +142,8 @@ Platform.prototype.messageRxd = function(api, event) {
                         if (response.type === 'text') {
                             response = response.message
                         }
-                        ga.event("Answer", "Sticker", "Content", response).send()
+                        console.log('ga-message-content')
+                        ga.event("Answer", "Message", "Content", response).send()
                         api.sendMessage(response, event.thread_id);
                     }
                 })

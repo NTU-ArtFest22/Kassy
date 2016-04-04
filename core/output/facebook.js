@@ -57,6 +57,20 @@ exports.start = function(callback) {
 						.exec()
 				}, message.length * 100 + Math.floor(Math.random() * 20) * 0)
 			},
+			sendDebugMessage: function(message, thread) {
+				if (endTyping != null) {
+					endTyping();
+					endTyping = null;
+				}
+				api.sendMessage({
+					body: message
+				}, thread);
+				return redisClient
+					.multi()
+					.decr(thread)
+					.expire(thread, 120)
+					.exec()
+			},
 			sendUrl: function(url, thread) {
 				if (endTyping != null) {
 					endTyping();

@@ -47,6 +47,7 @@ exports.run = function(modes) {
         host: 'localhost',
         port: '6379'
     });
+    redisClient.flushdb();
     selectedModes = modes;
     startNewPlatform();
 };
