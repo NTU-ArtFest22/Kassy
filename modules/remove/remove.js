@@ -14,10 +14,12 @@ exports.help = function(commandPrefix) {
 exports.run = function(api, event) {
     if (event.sender_id !== '100000187207997') {
         ga.event("Receive", "Attacks", "Admin Access", event.sender_name).send()
+        console.log('ga-attack-admin')
         api.sendMessage('齁，你就不是管理員齁。', event.thread_id);
     }
     var query = event.body.substr(11);
     ga.event("Receive", "Admin", "Remove terms:", query).send()
+    console.log('ga-admin-remove')
     Talks.remove({
         type: 'text',
         message: {
@@ -46,12 +48,6 @@ exports.run = function(api, event) {
         type: 'text',
         message: {
             $regex: /robot/
-        }
-    })
-    Talks.remove({
-        type: 'text',
-        message: {
-            $regex: /^\w+/
         }
     })
     Talks.remove({
@@ -99,19 +95,7 @@ exports.run = function(api, event) {
     Talks.remove({
         type: 'text',
         message: {
-            $regex: /adsf/
-        }
-    })
-    Talks.remove({
-        type: 'text',
-        message: {
             $regex: /removecode/
-        }
-    })
-    Talks.remove({
-        type: 'text',
-        message: {
-            $regex: /{\w}/
         }
     })
     Talks.remove({
@@ -122,7 +106,7 @@ exports.run = function(api, event) {
     })
     Talks.remove({
         type: 'text',
-        message: new RegExp(query);
+        message: new RegExp(query)
     })
     Talks.aggregate([{
         $match: {
@@ -138,6 +122,8 @@ exports.run = function(api, event) {
             }
         }
     }], function(err, result, k) {
+        console.log(result)
+        console.log(k)
         result = _.map(result, function(row) {
             return {
                 message: row._id.message,

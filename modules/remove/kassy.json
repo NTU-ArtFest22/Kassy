@@ -1,5 +1,5 @@
 ﻿{
-  "name": "removecode",
+  "name": "remove",
   "version": 2.0,
-  "startup": "removecode.js"
+  "startup": "remove.js"
 }

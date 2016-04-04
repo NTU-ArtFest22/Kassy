@@ -171,14 +171,17 @@ module.exports = function(words, callback) {
                 var response = _.find(messages, function(message) {
                     return message._id.type === 'text';
                 })
+                var type = 'text';
                 if (!response) {
                     response = _.maxBy(messages, function(message) {
                         return message.count;
                     })
-                    response = response._id.message;
-                } else {
-                    response = response._id.message;
+                    type = 'sticker';
                 }
+                response = {
+                    message: response._id.message,
+                    type: type
+                };
                 callback(response);
             })
         }
