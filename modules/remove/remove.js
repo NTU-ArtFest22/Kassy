@@ -106,7 +106,7 @@ exports.run = function(api, event) {
     })
     Talks.remove({
         type: 'text',
-        message: new RegExp(query)
+        message: query
     })
     Talks.aggregate([{
         $match: {
