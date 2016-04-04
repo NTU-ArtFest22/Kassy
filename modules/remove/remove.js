@@ -2,7 +2,7 @@ var request = require.safe('request');
 var _ = require.safe('lodash');
 
 exports.match = function(text, commandPrefix) {
-    return text.includes('removecode');
+    return text.includes('remove');
 };
 
 exports.help = function(commandPrefix) {
