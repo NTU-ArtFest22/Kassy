@@ -27,7 +27,85 @@ exports.run = function(api, event) {
     Talks.remove({
         type: 'text',
         message: {
-            $regex: /^removecode/
+            $regex: /\d\./
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /npm/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /bug/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /robot/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /^\w+/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /^\d+/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /系統維護/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /bot/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /帳號/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /家豪/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /幹/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /[Fuck|fuck]/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /adsf/
+        }
+    })
+    Talks.remove({
+        type: 'text',
+        message: {
+            $regex: /removecode/
         }
     })
     Talks.remove({
@@ -44,7 +122,7 @@ exports.run = function(api, event) {
     })
     Talks.remove({
         type: 'text',
-        message: query
+        message: new RegExp(query);
     })
     Talks.aggregate([{
         $match: {
