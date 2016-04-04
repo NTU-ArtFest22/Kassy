@@ -19,8 +19,8 @@ exports.joke = function(callback) {
             size: 1
         }
     }], function(err, message) {
-        // console.log(message[0])
-        callback(message[0].content || response);
+        var content = message[0].article_title + '\n' + message[0].url;
+        callback(content || response);
     })
 };
 
