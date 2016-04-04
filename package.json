@@ -26,6 +26,7 @@
     "sleep": "*",
     "stripcolorcodes": "0.1.0",
     "tmp": "0.0.28",
+    "universal-analytics": "^0.3.11",
     "ws": "^0.8.0"
   },
   "devDependencies": {

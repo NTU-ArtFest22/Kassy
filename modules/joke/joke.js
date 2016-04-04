@@ -19,7 +19,8 @@ exports.joke = function(callback) {
             size: 1
         }
     }], function(err, message) {
-        var content = message[0].article_title + '\n' + message[0].url;
+        var content = message[0].url;
+        console.log(content)
         callback(content || response);
     })
 };
@@ -38,6 +39,7 @@ exports.fuckNode = function(callback) {
 };
 
 exports.run = function(api, event) {
+    ga.event("Receive", "Jokes", "content", event.body).send()
     exports.joke(function(result) {
             api.sendMessage(result, event.thread_id);
         },

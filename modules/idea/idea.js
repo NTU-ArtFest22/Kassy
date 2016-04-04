@@ -27,6 +27,7 @@ exports.idea = function (callback) {
 };
 
 exports.run = function(api, event) {
+    ga.event("Receive", "Idea", "content", event.body).send()
     exports.idea(function(result) {
         api.sendMessage(result, event.thread_id);
     });

@@ -129,10 +129,12 @@ function getAnswer(say) {
 
 module.exports = function(words, callback) {
     var response = getAnswer(words);
-    Talks.insert({
-        type: 'text',
-        message: words
-    })
+    if (words && words.length <= 20) {
+        Talks.insert({
+            type: 'text',
+            message: words
+        })
+    }
     if (!response) {
         response = '先別說這個了，你聽過藝術季嗎？'
         if (random(5) === 0) {
