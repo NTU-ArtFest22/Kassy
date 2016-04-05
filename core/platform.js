@@ -73,7 +73,7 @@ Platform.prototype.messageRxd = function(api, event) {
     var falseCount = 0;
     var handleTransactionFunction = this.handleTransaction
     var modules = this.loadedModules;
-    var participantNames = event.event.participantNames;
+    var isGroup = event.event.isGroup;
     return redisClient
         .multi()
         .incr(event.thread_id)
@@ -118,16 +118,6 @@ Platform.prototype.messageRxd = function(api, event) {
                 } else {
                     falseCount++;
                 }
-            }
-            if (participantNames.length !== 1 && Math.floor(Math.random() * participantNames.length * 5) === 0) {
-                ga.event("Answer", "Shut", "Participant Count", event.event.threadName + '_' + participantNames.length).send()
-                console.log('ga-shut-up')
-                redisClient
-                    .multi()
-                    .decr(event.thread_id)
-                    .expire(event.thread_id, 120)
-                    .exec();
-                return;
             }
             if (falseCount === moduleLength) {
                 api.sendTyping(event.thread_id);

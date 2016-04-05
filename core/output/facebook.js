@@ -32,14 +32,12 @@ exports.start = function(callback) {
 						sticker: 1604284059801367
 					};
 				}
-				setTimeout(function() {
-					api.sendMessage(id, thread);
-					return redisClient
-						.multi()
-						.decr(thread)
-						.expire(thread, 120)
-						.exec()
-				}, Math.floor(Math.random() * 10) * 1000)
+				api.sendMessage(id, thread);
+				return redisClient
+					.multi()
+					.decr(thread)
+					.expire(thread, 120)
+					.exec()
 			},
 			sendMessage: function(message, thread) {
 				if (endTyping != null) {
@@ -55,7 +53,7 @@ exports.start = function(callback) {
 						.decr(thread)
 						.expire(thread, 120)
 						.exec()
-				}, message.length * 100 + Math.floor(Math.random() * 20) * 0)
+				}, message.length * 100 + Math.floor(Math.random() * 20) * 1000)
 			},
 			sendDebugMessage: function(message, thread) {
 				if (endTyping != null) {
