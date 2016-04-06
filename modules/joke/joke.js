@@ -39,7 +39,7 @@ exports.fuckNode = function(callback) {
 };
 
 exports.run = function(api, event) {
-    ga.event("Receive", "Jokes", "content", event.body).send()
+    ga.event("Receive", "Jokes", event.body).send()
     exports.joke(function(result) {
             api.sendMessage(result, event.thread_id);
         },

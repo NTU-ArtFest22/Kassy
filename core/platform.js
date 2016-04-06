@@ -9,14 +9,11 @@
  *        MIT License. All code unless otherwise specified is
  *        Copyright (c) Matthew Knox and Contributors 2015.
  */
-
 var figlet = require('figlet');
 var request = require('request');
 var defaultMessage = require('./default.js');
-
 Platform = function(modes) {
     require.reload('./prototypes.js');
-
     this.config = require('./config.js');
     this.loadedModules = [];
     this.modes = null;
@@ -26,11 +23,9 @@ Platform = function(modes) {
     this.statusFlag = StatusFlag.NotStarted;
     this.onShutdown = null;
     this.waitingTime = 2500;
-
     this.packageInfo.name = this.packageInfo.name.toProperCase();
     this.setModes(modes);
 };
-
 Platform.prototype.handleTransaction = function(module, args) {
     var returnVal = true,
         timeout = setTimeout(function() {
@@ -42,13 +37,12 @@ Platform.prototype.handleTransaction = function(module, args) {
     returnVal = module.run.apply(module, args);
     clearTimeout(timeout);
 };
-
 Platform.prototype.messageRxd = function(api, event) {
     if (console.isDebug() && event.sender_id !== '100000187207997') {
         return;
     }
     if (event.event && event.event.attachments && event.event.attachments[0] && event.event.attachments[0].type === 'sticker') {
-        ga.event("Receive", "Sticker", "Content", event.event.attachments[0].stickerID).send()
+        ga.event("Receive", "Sticker", event.event.attachments[0].stickerID).send()
         Talks.insert({
             type: 'sticker',
             message: event.event.attachments[0].stickerID
@@ -88,7 +82,7 @@ Platform.prototype.messageRxd = function(api, event) {
                     .exec();
                 if (value[0][1] > 6) {
                     console.log('ga-attacks-dos')
-                    ga.event("Receive", "Attacks", "DOS", event.sender_name).send()
+                    ga.event("Receive", "Attacks_possible_DOS", event.sender_name).send()
                     return redisClient
                         .multi()
                         .set(event.thread_id, 0)
@@ -106,7 +100,6 @@ Platform.prototype.messageRxd = function(api, event) {
                     console.critical(e);
                     continue;
                 }
-
                 if (matchResult) {
                     try {
                         handleTransactionFunction(modules[i], runArgs);
@@ -124,7 +117,7 @@ Platform.prototype.messageRxd = function(api, event) {
                 defaultMessage(event.body, function(response) {
                     if (response.type === 'sticker') {
                         console.log('ga-sticker-content')
-                        ga.event("Answer", "Sticker", "Content", response).send()
+                        ga.event("Answer", "Sticker", response).send()
                         api.sendSticker({
                             sticker: response.message
                         }, event.thread_id);
@@ -133,7 +126,7 @@ Platform.prototype.messageRxd = function(api, event) {
                             response = response.message
                         }
                         console.log('ga-message-content')
-                        ga.event("Answer", "Message", "Content", response).send()
+                        ga.event("Answer", "Message", response).send()
                         api.sendMessage(response, event.thread_id);
                     }
                 })
@@ -141,7 +134,6 @@ Platform.prototype.messageRxd = function(api, event) {
             }
         })
 };
-
 Platform.prototype.setModes = function(modes) {
     try {
         if (this.statusFlag !== StatusFlag.NotStarted) {
@@ -163,7 +155,6 @@ Platform.prototype.setModes = function(modes) {
         return false;
     }
 };
-
 Platform.prototype.start = function() {
     if (this.statusFlag !== StatusFlag.NotStarted) {
         throw 'Cannot start platform when it is already started.';
@@ -171,13 +162,10 @@ Platform.prototype.start = function() {
     if (!this.modes.length) {
         throw 'Modes must be set before starting';
     }
-
     console.title(figlet.textSync(this.packageInfo.name.toProperCase()));
-
     console.title(' ' + this.packageInfo.version);
     console.info('------------------------------------');
     console.warn('Starting system...\n' + 'Loading system configuration...');
-
     this.modules.disabledConfig = this.config.loadDisabledConfig();
     for (var i = 0; i < this.modes.length; i++) {
         this.modes[i].instance.platform = this;
@@ -186,7 +174,6 @@ Platform.prototype.start = function() {
             this.modes[i].instance.config.commandPrefix = this.defaultPrefix;
         }
     }
-
     // Load Kassy modules
     console.warn('Loading modules...');
     m = this.modules.listModules();
@@ -196,7 +183,6 @@ Platform.prototype.start = function() {
             this.loadedModules.push(ld);
         }
     }
-
     // Starting output
     console.warn('Starting integrations...');
     for (var i = 0; i < this.modes.length; i++) {
@@ -210,11 +196,9 @@ Platform.prototype.start = function() {
             console.critical(e);
         }
     }
-
     this.statusFlag = StatusFlag.Started;
     console.warn('System has started. ' + 'Hello World!'.rainbow);
 };
-
 Platform.prototype.shutdown = function(flag) {
     if (this.statusFlag !== StatusFlag.Started) {
         throw 'Cannot shutdown platform when it is not started.';
@@ -222,7 +206,6 @@ Platform.prototype.shutdown = function(flag) {
     if (!flag) {
         flag = 0;
     }
-
     // Stop output modes
     for (var i = 0; i < this.modes.length; i++) {
         try {
@@ -232,7 +215,6 @@ Platform.prototype.shutdown = function(flag) {
             console.critical(e);
         }
     }
-
     // Unload user modules
     for (var i = 0; i < this.loadedModules.length; i++) {
         if (this.loadedModules[i].unload) {
@@ -241,18 +223,14 @@ Platform.prototype.shutdown = function(flag) {
         this.loadedModules[i] = null;
     }
     this.loadedModules = [];
-
     this.config.saveConfig();
     this.statusFlag = flag ? flag : StatusFlag.Shutdown;
-
     console.warn(this.packageInfo.name + " has shutdown.");
     if (this.onShutdown && this.onShutdown != null) {
         this.onShutdown(this.statusFlag);
     }
 };
-
 Platform.prototype.setOnShutdown = function(onShutdown) {
     this.onShutdown = onShutdown;
 };
-
 module.exports = Platform;

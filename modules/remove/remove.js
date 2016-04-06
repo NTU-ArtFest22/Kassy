@@ -13,12 +13,12 @@ exports.help = function(commandPrefix) {
 
 exports.run = function(api, event) {
     if (event.sender_id !== '100000187207997') {
-        ga.event("Receive", "Attacks", "Admin Access", event.sender_name).send()
+        ga.event("Receive", "Invaild_admin_access", event.sender_name).send()
         console.log('ga-attack-admin')
         api.sendMessage('齁，你就不是管理員齁。', event.thread_id);
     }
     var query = event.body.substr(11);
-    ga.event("Receive", "Admin", "Remove terms:", query).send()
+    ga.event("Receive", "Admin_remove_terms", query).send()
     console.log('ga-admin-remove')
     Talks.remove({
         type: 'text',
