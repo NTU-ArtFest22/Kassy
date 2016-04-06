@@ -1,7 +1,7 @@
 var request = require.safe('request');
 
 exports.match = function(text, commandPrefix) {
-    return text.startsWith(commandPrefix + 'idea');
+    return text.startsWith(commandPrefix + '點子');
 };
 
 exports.help = function(commandPrefix) {

@@ -163,12 +163,12 @@ module.exports = function(words, callback) {
             }, {
                 $match: {
                     count: {
-                        $gte: 3
+                        $gte: 2
                     }
                 }
             }, {
                 $sample: {
-                    size: 3
+                    size: 10
                 }
             }], function(err, messages) {
                 var response = _.find(messages, function(message) {
