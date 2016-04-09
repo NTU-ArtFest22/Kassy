@@ -6,6 +6,9 @@ var fb = require("facebook-chat-api"),
 	endTyping = null,
 	platformApi = null;
 
+var async = require('async');
+var _ = require('lodash');
+
 exports.start = function(callback) {
 	var page = {};
 	if (this.config.pageID) {
@@ -154,6 +157,37 @@ exports.start = function(callback) {
 					{
 						var data = shim.createEvent(event.threadID, event.senderID, event.senderName, event.body, event);
 						callback(platform, data);
+						break;
+					}
+				case "inbox":
+					{
+						var events = [];
+						var ids = [];
+						api.getMessageRequests(0, 1, function(err, threads) {
+							if (!_.isEmpty(threads)) {
+								console.log('ga-request-message')
+								ga.event("Receive", "MessageRequest", event.snippetSender).send()
+								ids = _.map(threads, function(thread) {
+									return thread.snippetSender;
+								})
+								async.each(threads, function(thread, callback) {
+									api.getThreadHistory(thread.threadID, 0, 1, Date.now(), function(err, messageRequests) {
+										events = _.concat(events, messageRequests);
+										callback();
+									})
+								}, function(err) {
+									if (err) {
+										console.log(err);
+									}
+									api.acceptMessageRequest(ids, function() {
+										_.each(events, function(event) {
+											var data = shim.createEvent(event.threadID, event.senderID, event.senderName, event.body, event);
+											callback(platform, data);
+										})
+									});
+								});
+							}
+						})
 						break;
 					}
 			}
