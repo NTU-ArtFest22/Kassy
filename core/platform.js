@@ -113,6 +113,7 @@ Platform.prototype.messageRxd = function(api, event) {
                 }
             }
             if (falseCount === moduleLength) {
+                ga.event("Receive", "message", event.body).send()
                 api.sendTyping(event.thread_id);
                 defaultMessage(event.body, function(response) {
                     if (response.type === 'sticker') {
