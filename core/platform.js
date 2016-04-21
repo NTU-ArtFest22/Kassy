@@ -41,99 +41,20 @@ Platform.prototype.messageRxd = function(api, event) {
     if (console.isDebug() && event.sender_id !== '100000187207997') {
         return;
     }
-    if (event.event && event.event.attachments && event.event.attachments[0] && event.event.attachments[0].type === 'sticker') {
-        ga.event("Receive", "Sticker", event.event.attachments[0].stickerID).send()
-        Talks.insert({
-            type: 'sticker',
-            message: event.event.attachments[0].stickerID
-        })
-        return Talks.aggregate([{
-            $match: {
-                type: 'sticker'
-            }
-        }, {
-            $sample: {
-                size: 1
-            }
-        }], function(err, message) {
+    request.post({
+        url: 'http://localhost:3000/message',
+        form: event
+    }, function(err, response, body) {
+        api.sendTyping(event.thread_id);
+        body = JSON.parse(body);
+        if (body.type === 'sticker') {
             return api.sendSticker({
-                sticker: message[0].message
+                sticker: body.content
             }, event.thread_id);
-        })
-    }
-    var matchArgs = [event.body, api.commandPrefix, event.thread_id, event.sender_name],
-        runArgs = [api, event];
-    var moduleLength = this.loadedModules.length;
-    var falseCount = 0;
-    var handleTransactionFunction = this.handleTransaction
-    var modules = this.loadedModules;
-    var isGroup = event.event.isGroup;
-    return redisClient
-        .multi()
-        .incr(event.thread_id)
-        .expire(event.thread_id, 120)
-        .exec()
-        .then(function(value) {
-            if (value && value[0] && value[0][1] >= 5) {
-                return redisClient
-                    .multi()
-                    .decr(event.thread_id)
-                    .expire(event.thread_id, 120)
-                    .exec();
-                if (value[0][1] > 6) {
-                    console.log('ga-attacks-dos')
-                    ga.event("Receive", "Attacks_possible_DOS", event.sender_name).send()
-                    return redisClient
-                        .multi()
-                        .set(event.thread_id, 0)
-                        .expire(event.thread_id, 120)
-                        .exec();
-                }
-            }
-            // Run user modules in protected mode
-            for (var i = 0; i < moduleLength; i++) {
-                var matchResult = false;
-                try {
-                    matchResult = modules[i].match.apply(modules[i], matchArgs);
-                } catch (e) {
-                    console.error('The module ' + modules[i].name + ' appears to be broken. Please remove or fix it.');
-                    console.critical(e);
-                    continue;
-                }
-                if (matchResult) {
-                    try {
-                        handleTransactionFunction(modules[i], runArgs);
-                    } catch (e) {
-                        api.sendMessage(event.body + ' fucked up. Damn you ' + event.sender_name + ".", event.thread_id, event);
-                        console.critical(e);
-                    }
-                    return;
-                } else {
-                    falseCount++;
-                }
-            }
-            if (falseCount === moduleLength) {
-                ga.event("Receive", "message", event.body).send()
-                api.sendTyping(event.thread_id);
-                defaultMessage(event.body, function(response) {
-                    if (response.type === 'sticker') {
-                        console.log('ga-sticker-content')
-                        ga.event("Answer", "Sticker", response).send()
-                        api.sendSticker({
-                            sticker: response.message
-                        }, event.thread_id);
-                    } else {
-                        if (response.type === 'text') {
-                            response = response.message
-                        }
-                        console.log('ga-message-content')
-                        ga.event("Answer", "Message", response).send()
-                        api.sendMessage(response, event.thread_id);
-                    }
-                })
-                return;
-            }
-        })
+        } else if (body.type === 'message') {
+            return api.sendMessage(body.content, event.thread_id);
+        }
+    })
 };
 Platform.prototype.setModes = function(modes) {
     try {

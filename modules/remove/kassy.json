@@ -1,5 +1,0 @@
-﻿{
-  "name": "remove",
-  "version": 2.0,
-  "startup": "remove.js"
-}
