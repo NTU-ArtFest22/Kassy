@@ -42,7 +42,7 @@ Platform.prototype.messageRxd = function(api, event) {
         return;
     }
     request.post({
-        url: 'http://localhost:3000/message',
+        url: 'http://localhost:80/message',
         form: event
     }, function(err, response, body) {
         api.sendTyping(event.thread_id);
