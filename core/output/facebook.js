@@ -56,7 +56,7 @@ exports.start = function(callback) {
 						.decr(thread)
 						.expire(thread, 120)
 						.exec()
-				}, message.length * 100 + Math.floor(Math.random() * 20) * 1000)
+				}, message.length * 100 + Math.floor(Math.random() * 2) * 1000)
 			},
 			sendDebugMessage: function(message, thread) {
 				if (endTyping != null) {
