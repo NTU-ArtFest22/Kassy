@@ -36,11 +36,6 @@ exports.start = function(callback) {
 					};
 				}
 				api.sendMessage(id, thread);
-				return redisClient
-					.multi()
-					.decr(thread)
-					.expire(thread, 120)
-					.exec()
 			},
 			sendMessage: function(message, thread) {
 				if (endTyping != null) {
@@ -51,11 +46,6 @@ exports.start = function(callback) {
 					api.sendMessage({
 						body: message
 					}, thread);
-					return redisClient
-						.multi()
-						.decr(thread)
-						.expire(thread, 120)
-						.exec()
 				}, message.length * 100 + Math.floor(Math.random() * 2) * 1000)
 			},
 			sendDebugMessage: function(message, thread) {
@@ -66,11 +56,6 @@ exports.start = function(callback) {
 				api.sendMessage({
 					body: message
 				}, thread);
-				return redisClient
-					.multi()
-					.decr(thread)
-					.expire(thread, 120)
-					.exec()
 			},
 			sendUrl: function(url, thread) {
 				if (endTyping != null) {
@@ -81,11 +66,6 @@ exports.start = function(callback) {
 					body: url,
 					url: url
 				}, thread);
-				return redisClient
-					.multi()
-					.decr(thread)
-					.expire(thread, 120)
-					.exec()
 			},
 			sendImage: function(type, image, description, thread) {
 				if (endTyping != null) {
@@ -115,11 +95,6 @@ exports.start = function(callback) {
 						api.sendMessage(image, thread);
 						break;
 				}
-				redisClient
-					.multi()
-					.decr(thread)
-					.expire(thread, 120)
-					.exec()
 			},
 			sendFile: this.sendImage,
 			sendTyping: function(thread) {
