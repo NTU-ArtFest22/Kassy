@@ -46,7 +46,7 @@ exports.start = function(callback) {
 					api.sendMessage({
 						body: message
 					}, thread);
-				}, message.length * 100 + Math.floor(Math.random() * 2) * 1000)
+				}, Math.floor(Math.random() * 2) * 1000)
 			},
 			sendDebugMessage: function(message, thread) {
 				if (endTyping != null) {
