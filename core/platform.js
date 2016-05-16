@@ -46,6 +46,8 @@ Platform.prototype.messageRxd = function(api, event) {
         form: event.event
     }, function(err, response, body) {
         api.sendTyping(event.thread_id);
+        console.log(err)
+        console.log(body)
         body = JSON.parse(body);
         if (body.type === 'sticker') {
             return api.sendSticker({
