@@ -47,7 +47,7 @@ Platform.prototype.handleTransaction = function(module, args) {
 
 function getMessage(event, thread, api, eventId) {
     return request.post({
-        url: 'http://localhost:4000/message',
+        url: 'http://localhost:3500/message',
         form: event.event
     }, function(err, response, body) {
         api.sendTyping(thread);
