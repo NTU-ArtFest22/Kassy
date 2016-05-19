@@ -100,7 +100,7 @@ Platform.prototype.messageRxd = function(api, event) {
     if (matchList[thread]) {
         console.log('send matched message');
         if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'sticker') {
-            ga.message("Receive", "Sticker", message.attachments[0].stickerID).send()
+            ga.event("Answer", "MatchingSticker", message.attachments[0].stickerID).send()
             Talks.insert({
                 type: 'sticker',
                 message: message.attachments[0].stickerID
@@ -113,6 +113,7 @@ Platform.prototype.messageRxd = function(api, event) {
             }, thread);
         } else {
             messageEvent.emit('sending_to_' + matchList[thread])
+            ga.event("Answer", "MatchingMessage", message.body).send()
             return api.sendMessage(message.body, matchList[thread]);
         }
     }
