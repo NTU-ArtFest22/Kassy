@@ -11,7 +11,13 @@
  */
 var figlet = require('figlet');
 var request = require('request');
-var defaultMessage = require('./default.js');
+var EventEmitter = require('events');
+var _ = require('lodash');
+var messageEvent = new EventEmitter();
+
+var matchList = {};
+var singleList = [];
+
 Platform = function(modes) {
     require.reload('./prototypes.js');
     this.config = require('./config.js');
@@ -37,26 +43,79 @@ Platform.prototype.handleTransaction = function(module, args) {
     returnVal = module.run.apply(module, args);
     clearTimeout(timeout);
 };
-Platform.prototype.messageRxd = function(api, event) {
-    if (console.isDebug() && event.sender_id !== '100000187207997') {
-        return;
-    }
-    request.post({
-        url: 'http://localhost:80/message',
+
+
+function getMessage(event, thread, api, eventId) {
+    return request.post({
+        url: 'http://localhost:4000/message',
         form: event.event
     }, function(err, response, body) {
-        api.sendTyping(event.thread_id);
-        console.log(err)
-        console.log(body)
+        api.sendTyping(thread);
         body = JSON.parse(body);
         if (body.type === 'sticker') {
             return api.sendSticker({
                 sticker: body.content
-            }, event.thread_id);
+            }, thread);
         } else if (body.type === 'message') {
-            return api.sendMessage(body.content, event.thread_id);
+            return api.sendMessage(body.content, thread);
         }
     })
+}
+
+Platform.prototype.messageRxd = function(api, event) {
+    if (console.isDebug() && event.sender_id !== '100000187207997' && event.sender_id !== '100012106154442') {
+        return;
+    }
+    if (event.sender_id === '100012106154442' || event.sender_id === '100011651739263') {
+        return;
+    }
+    var timeoutCallback = function() {
+        console.log('match response')
+        clearTimeout(timer);
+    }
+    var thread = event.thread_id;
+    messageEvent.once('sending_to_' + thread, timeoutCallback)
+    var timer = setTimeout(function() {
+        console.log('timeout')
+        messageEvent.removeListener('sending_to_' + thread, timeoutCallback)
+        return getMessage(event, thread, api);
+    }, 20000);
+    if (!matchList[thread]) {
+        console.log('not matched, start matching');
+        if (!_.isEmpty(singleList) && !_.includes(singleList, thread)) {
+            var match = singleList.shift();
+            matchList[match] = thread;
+            matchList[thread] = match;
+            console.log('matched');
+        } else if (!_.includes(singleList, thread)) {
+            singleList.push(thread)
+            console.log('single');
+        } else {
+            clearTimeout(timer);
+            messageEvent.removeListener('sending_to_' + thread, timeoutCallback)
+            return getMessage(event, thread, api);
+        }
+    }
+    var message = event.event;
+    if (matchList[thread]) {
+        console.log('send matched message');
+        if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'sticker') {
+            ga.message("Receive", "Sticker", message.attachments[0].stickerID).send()
+            Talks.insert({
+                type: 'sticker',
+                message: message.attachments[0].stickerID
+            })
+            messageEvent.emit('sending_to_' + matchList[thread])
+            return api.sendMessage(message[0].message, matchList[thread]);
+        } else if (!message.body) {
+            return api.sendSticker({
+                sticker: 1604284059801367
+            }, thread);
+        } else {
+            messageEvent.emit('sending_to_' + matchList[thread])
+            return api.sendMessage(message.body, matchList[thread]);
+        }
+    }
 };
 Platform.prototype.setModes = function(modes) {
     try {
