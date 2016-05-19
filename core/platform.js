@@ -79,7 +79,7 @@ Platform.prototype.messageRxd = function(api, event) {
         console.log('timeout')
         messageEvent.removeListener('sending_to_' + thread, timeoutCallback)
         return getMessage(event, thread, api);
-    }, 20000);
+    }, 10000);
     if (!matchList[thread]) {
         console.log('not matched, start matching');
         if (!_.isEmpty(singleList) && !_.includes(singleList, thread)) {
