@@ -106,7 +106,7 @@ Platform.prototype.messageRxd = function(api, event) {
                 message: message.attachments[0].stickerID
             })
             messageEvent.emit('sending_to_' + matchList[thread])
-            return api.sendMessage(message[0].message, matchList[thread]);
+            return api.sendMessage(message.attachments[0].stickerID, matchList[thread]);
         } else if (!message.body) {
             return api.sendSticker({
                 sticker: 1604284059801367
