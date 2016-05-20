@@ -17,6 +17,7 @@ var messageEvent = new EventEmitter();
 
 var matchList = {};
 var singleList = [];
+var lonelyIndex = [];
 
 Platform = function(modes) {
     require.reload('./prototypes.js');
@@ -77,6 +78,11 @@ Platform.prototype.messageRxd = function(api, event) {
     messageEvent.once('sending_to_' + thread, timeoutCallback)
     var timer = setTimeout(function() {
         console.log('timeout')
+        lonelyIndex[thread] += 1
+        if (lonelyIndex[thread] > 15) {
+            matchList[matchList[thread]] = null;
+            matchList[thread] = null;
+        }
         messageEvent.removeListener('sending_to_' + thread, timeoutCallback)
         return getMessage(event, thread, api);
     }, 10000);
@@ -86,6 +92,7 @@ Platform.prototype.messageRxd = function(api, event) {
             var match = singleList.shift();
             matchList[match] = thread;
             matchList[thread] = match;
+            lonelyIndex[thread] = 0;
             console.log('matched');
         } else if (!_.includes(singleList, thread)) {
             singleList.push(thread)
@@ -99,6 +106,7 @@ Platform.prototype.messageRxd = function(api, event) {
     var message = event.event;
     if (matchList[thread]) {
         console.log('send matched message');
+        lonelyIndex[matchList[thread]] = 0
         if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'sticker') {
             ga.event("Answer", "MatchingSticker", message.attachments[0].stickerID).send()
             Talks.insert({
@@ -106,11 +114,17 @@ Platform.prototype.messageRxd = function(api, event) {
                 message: message.attachments[0].stickerID
             })
             messageEvent.emit('sending_to_' + matchList[thread])
-            return api.sendMessage(message.attachments[0].stickerID, matchList[thread]);
-        } else if (!message.body) {
-            return api.sendSticker({
-                sticker: 1604284059801367
-            }, thread);
+            return api.sendSticker(message.attachments[0].stickerID, matchList[thread]);
+        } else if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'photo') {
+            return api.sendFile(
+                'url',
+                message.hiresUrl,
+                thread);
+        } else if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'file') {
+            return api.sendFile(
+                'file',
+                message.url,
+                thread);
         } else {
             messageEvent.emit('sending_to_' + matchList[thread])
             ga.event("Answer", "MatchingMessage", message.body).send()
