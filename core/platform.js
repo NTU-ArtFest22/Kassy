@@ -118,12 +118,12 @@ Platform.prototype.messageRxd = function(api, event) {
         } else if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'photo') {
             return api.sendFile(
                 'url',
-                message.hiresUrl,
+                message.attachments[0].hiresUrl,
                 thread);
         } else if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'file') {
             return api.sendFile(
                 'file',
-                message.url,
+                message.attachments[0].url,
                 thread);
         } else {
             messageEvent.emit('sending_to_' + matchList[thread])
