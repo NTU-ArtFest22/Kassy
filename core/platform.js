@@ -59,6 +59,10 @@ function getMessage(event, thread, api, eventId) {
             }, thread);
         } else if (body.type === 'message') {
             return api.sendMessage(body.content, thread);
+        } else if (body.type === 'photo') {
+            return api.sendFile('url', body.content, thread);
+        } else if (body.type === 'file') {
+            return api.sendFile('url', body.content, thread);
         }
     })
 }
@@ -122,7 +126,7 @@ Platform.prototype.messageRxd = function(api, event) {
                 thread);
         } else if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'file') {
             return api.sendFile(
-                'file',
+                'url',
                 message.attachments[0].url,
                 thread);
         } else {
