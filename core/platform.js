@@ -69,6 +69,7 @@ function getMessage(event, thread, api, eventId) {
 }
 
 function cleanMatchingList(thread) {
+    console.log('cleaning matching list for ' + thread)
     matchList[matchList[thread].thread] = null;
     matchList[thread] = null;
 }
@@ -121,6 +122,7 @@ Platform.prototype.messageRxd = function(api, event) {
     }
     var now = moment();
     var diff = now.diff(matchList[thread], 'minutes')
+    console.log(diff)
     if (diff > 15) {
         cleanMatchingList(thread);
     }
