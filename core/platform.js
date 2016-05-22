@@ -101,11 +101,11 @@ Platform.prototype.messageRxd = function(api, event) {
             var match = singleList.shift();
             matchList[match] = {
                 thread: thread,
-                time: now;
+                time: now
             };
             matchList[thread] = {
                 thread: match,
-                time: now;
+                time: now
             };
             lonelyIndex[thread] = 0;
             console.log('matched');
