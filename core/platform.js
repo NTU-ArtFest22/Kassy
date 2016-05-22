@@ -121,7 +121,7 @@ Platform.prototype.messageRxd = function(api, event) {
         }
     }
     var now = moment();
-    var diff = now.diff(matchList[thread], 'minutes')
+    var diff = now.diff(matchList[thread].time, 'minutes')
     console.log(diff)
     if (diff > 15) {
         cleanMatchingList(thread);
