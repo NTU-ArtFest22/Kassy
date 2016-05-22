@@ -13,6 +13,7 @@ var figlet = require('figlet');
 var request = require('request');
 var EventEmitter = require('events');
 var _ = require('lodash');
+var moment = require('moment');
 var messageEvent = new EventEmitter();
 
 var matchList = {};
