@@ -120,14 +120,14 @@ Platform.prototype.messageRxd = function(api, event) {
             return getMessage(event, thread, api);
         }
     }
-    var now = moment();
-    var diff = now.diff(matchList[thread].time, 'minutes')
-    console.log(diff)
-    if (diff > 15) {
-        cleanMatchingList(thread);
-    }
     var message = event.event;
     if (matchList[thread]) {
+        var now = moment();
+        var diff = now.diff(matchList[thread].time, 'minutes')
+        console.log(diff)
+        if (diff > 15) {
+            cleanMatchingList(thread);
+        }
         console.log('send matched message');
         lonelyIndex[matchList[thread].thread] = 0
         if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'sticker') {
