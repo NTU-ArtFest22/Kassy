@@ -90,7 +90,7 @@ Platform.prototype.messageRxd = function(api, event) {
     var timer = setTimeout(function() {
         console.log('timeout')
         lonelyIndex[thread] += 1
-        if (lonelyIndex[thread] > 10) {
+        if (lonelyIndex[thread] > 5) {
             cleanMatchingList(thread)
         }
         messageEvent.removeListener('sending_to_' + thread, timeoutCallback)
