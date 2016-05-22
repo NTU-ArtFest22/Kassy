@@ -67,6 +67,11 @@ function getMessage(event, thread, api, eventId) {
     })
 }
 
+function cleanMatchingList(thread) {
+    matchList[matchList[thread].thread] = null;
+    matchList[thread] = null;
+}
+
 Platform.prototype.messageRxd = function(api, event) {
     if (console.isDebug() && event.sender_id !== '100000187207997' && event.sender_id !== '100012106154442') {
         return;
@@ -83,9 +88,8 @@ Platform.prototype.messageRxd = function(api, event) {
     var timer = setTimeout(function() {
         console.log('timeout')
         lonelyIndex[thread] += 1
-        if (lonelyIndex[thread] > 15) {
-            matchList[matchList[thread]] = null;
-            matchList[thread] = null;
+        if (lonelyIndex[thread] > 10) {
+            cleanMatchingList(thread)
         }
         messageEvent.removeListener('sending_to_' + thread, timeoutCallback)
         return getMessage(event, thread, api);
@@ -93,9 +97,16 @@ Platform.prototype.messageRxd = function(api, event) {
     if (!matchList[thread]) {
         console.log('not matched, start matching');
         if (!_.isEmpty(singleList) && !_.includes(singleList, thread)) {
+            var now = moment();
             var match = singleList.shift();
-            matchList[match] = thread;
-            matchList[thread] = match;
+            matchList[match] = {
+                thread: thread,
+                time: now;
+            };
+            matchList[thread] = {
+                thread: match,
+                time: now;
+            };
             lonelyIndex[thread] = 0;
             console.log('matched');
         } else if (!_.includes(singleList, thread)) {
@@ -107,20 +118,25 @@ Platform.prototype.messageRxd = function(api, event) {
             return getMessage(event, thread, api);
         }
     }
+    var now = moment();
+    var diff = now.diff(matchList[thread], 'minutes')
+    if (diff > 15) {
+        cleanMatchingList(thread);
+    }
     var message = event.event;
     if (matchList[thread]) {
         console.log('send matched message');
-        lonelyIndex[matchList[thread]] = 0
+        lonelyIndex[matchList[thread].thread] = 0
         if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'sticker') {
             ga.event("Answer", "MatchingSticker", message.attachments[0].stickerID).send()
             Talks.insert({
                 type: 'sticker',
                 message: message.attachments[0].stickerID
             })
-            messageEvent.emit('sending_to_' + matchList[thread])
+            messageEvent.emit('sending_to_' + matchList[thread].thread)
             return api.sendSticker({
                 sticker: message.attachments[0].stickerID
-            }, matchList[thread]);
+            }, matchList[thread].thread);
         } else if (message && message.attachments && message.attachments[0] && message.attachments[0].type === 'photo') {
             return api.sendFile(
                 'url',
@@ -132,9 +148,9 @@ Platform.prototype.messageRxd = function(api, event) {
                 message.attachments[0].url,
                 thread);
         } else {
-            messageEvent.emit('sending_to_' + matchList[thread])
+            messageEvent.emit('sending_to_' + matchList[thread].thread)
             ga.event("Answer", "MatchingMessage", message.body).send()
-            return api.sendMessage(message.body, matchList[thread]);
+            return api.sendMessage(message.body, matchList[thread].thread);
         }
     }
 };
